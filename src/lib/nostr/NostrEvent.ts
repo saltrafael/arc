@@ -46,6 +46,9 @@ export class NostrEvent {
         // case 4:
         //   this.saveDirectMessage()
         //   break
+        case 7:
+          this.saveReaction()
+          break
         case 40:
           this.saveChannel()
           break
@@ -155,6 +158,36 @@ export class NostrEvent {
   private saveDirectMessage() {
     const { id, pubkey, created_at, kind, tags, content, sig } = this
     const sql = `INSERT INTO arc_direct_messages (id, pubkey, created_at, kind, tags, content, sig) VALUES (?, ?, ?, ?, ?, ?, ?)`
+    const params = [
+      id,
+      pubkey,
+      created_at,
+      kind,
+      JSON.stringify(tags),
+      content,
+      sig,
+    ]
+    this.db.transaction((tx) => {
+      tx.executeSql(sql, params)
+    })
+  }
+
+  // Kind 7
+  private saveReaction() {
+    const { addReactions } = useStore.getState()
+    const { id, pubkey, created_at, kind, tags, content, sig } = this
+    addReactions([
+      {
+        id,
+        content,
+        created_at,
+        kind,
+        pubkey,
+        sig,
+        tags: JSON.stringify(tags),
+      },
+    ])
+    const sql = `INSERT INTO arc_reactions (id, pubkey, created_at, kind, tags, content, sig) VALUES (?, ?, ?, ?, ?, ?, ?)`
     const params = [
       id,
       pubkey,

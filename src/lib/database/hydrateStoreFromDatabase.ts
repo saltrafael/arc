@@ -2,7 +2,7 @@ import { useStore } from 'app/stores'
 import { db } from 'lib/database/useDatabase'
 
 export const hydrateStoreFromDatabase = async () => {
-  const { addUsers, addNotes, addChannels, addChannelMessages } =
+  const { addUsers, addNotes, addReactions, addChannels, addChannelMessages } =
     useStore.getState()
 
   db.transaction((tx) => {
@@ -32,6 +32,21 @@ export const hydrateStoreFromDatabase = async () => {
       },
       (_, error) => {
         console.log('Error querying arc_notes', error)
+        return false
+      }
+    )
+
+    tx.executeSql(
+      'SELECT * FROM arc_reactions',
+      [],
+      (_, { rows: { _array } }) => {
+        const reactions = _array.map((reaction) => {
+          return reaction
+        })
+        addReactions(reactions)
+      },
+      (_, error) => {
+        console.log('Error querying arc_reactions', error)
         return false
       }
     )
